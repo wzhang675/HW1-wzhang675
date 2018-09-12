@@ -1,12 +1,12 @@
 ---
 title: "STA521 HW1"
-author: '[Your Name Here and netid]'
+author: '[Wei Zhang wz94]'
 date: "Due Wednesday September 12, 2018"
 output:
+  pdf_document: default
+  html_notebook: default
   html_document:
     df_print: paged
-  html_notebook: default
-  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -25,25 +25,58 @@ data(Auto)
 1. Create a summary of the data.  How many variables have missing data?
 
 ```{r}
-
+summary(Auto)
+#check whether any variables have missing data
+sum(is.na(Auto$mpg))
+sum(is.na(Auto$displacement))
+sum(is.na(Auto$horsepower))
+sum(is.na(Auto$weight))
+sum(is.na(Auto$acceleration))
+sum(is.na(Auto$year))
+sum(is.na(Auto$origin))
+sum(is.na(Auto$name))
+#we can find that all get results zero, which means none of those variables have missing variables.
 ```
-
 
 2.  Which of the predictors are quantitative, and which are qualitative?
 ```{r}
-
+#From results in question 1, we can see that the name variable
+#is qualitative, other variables are quantitative.
 ```
 
 3. What is the range of each quantitative predictor? You can answer this using the `range()` function.   Create a table with variable name, min, max with one row per variable.   `kable` from the package `knitr` can display tables nicely.
 
 ```{r}
-
+library(knitr)
+df<-data.frame(matrix(ncol = 3, nrow = 0))
+df<-rbind(df,data.frame(t(c("mpg",range(Auto$mpg)))))
+df<-rbind(df,data.frame(t(c("cylinders",range(Auto$cylinders)))))
+df<-rbind(df,data.frame(t(c("displacement",range(Auto$displacement)))))
+df<-rbind(df,data.frame(t(c("horsepower",range(Auto$horsepower)))))
+df<-rbind(df,data.frame(t(c("weight",range(Auto$weight)))))
+df<-rbind(df,data.frame(t(c("acceleration",range(Auto$acceleration)))))
+df<-rbind(df,data.frame(t(c("year",range(Auto$year)))))
+df<-rbind(df,data.frame(t(c("origin",range(Auto$origin)))))
+varna<-c("Variable name","min", "max")
+colnames(df)<-varna
+kable(df)
 ```
 
 4. What is the mean and standard deviation of each quantitative predictor?  _Format nicely in a table as above_
 
 ```{r}
-
+df1<-data.frame(matrix(ncol = 3, nrow = 0))
+df1<-rbind(df1,data.frame(t(c("mpg",mean(Auto$mpg),sd(Auto$mpg)))))
+df1<-rbind(df1,data.frame(t(c("cylinders",mean(Auto$cylinders),sd(Auto$cylinders)))))
+df1<-rbind(df1,data.frame(t(c("displacement",mean(Auto$displacement),sd(Auto$displacement)))))
+df1<-rbind(df1,data.frame(t(c("horsepower",mean(Auto$horsepower),sd(Auto$horsepower)))))
+df1<-rbind(df1,data.frame(t(c("weight",mean(Auto$weight),sd(Auto$weight)))))
+df1<-rbind(df1,data.frame(t(c("acceleration",mean(Auto$acceleration),sd(Auto$acceleration)))))
+df1<-rbind(df1,data.frame(t(c("year",mean(Auto$year),sd(Auto$year)))))
+df1<-rbind(df1,data.frame(t(c("origin",mean(Auto$origin),sd(Auto$origin)))))
+varna1<-c("Variable name","mean", "std")
+colnames(df1)<-varna1
+kable(df1)
 ```
 
 
@@ -51,13 +84,29 @@ data(Auto)
 highlighting the relationships among the predictors. Comment
 on your findings.  _Try adding a caption to your figure_
 ```{r}
+library(GGally)
+ggpairs(Auto,columns=1:4)
+ggpairs(Auto,columns=5:6,title="Relation between weight and acceleration" )
 
+#we can see that the horsepower predictors has positive correaltion with
+#cylinders and displacement.
+#Also from the second scatter plot we can conclude that there is negative
+#correlation between weight and acceleration. 
 ```
 
 6. Suppose that we wish to predict gas mileage (mpg) on the basis of the other variables using regression. Do your plots suggest that any of the other variables might be useful in predicting mpg using linear regression? Justify your answer.
 
 ```{r}
+#Yes, from the first graph I drew, I found mpg might be negatively
+#correlated with cylinders, horsepower and displacement. This means
+#Those three variables may have the ability to predict mpg.
 
+model=lm(mpg~cylinders+displacement+horsepower,data=Auto)
+summary(model)
+
+#we can find that the pval for displacement and horsepower are realy
+#small which means they are significant. Additionally, the fval is 
+#very high which means those predictors are useful in predicting mpg.
 ```
 
 
@@ -77,16 +126,44 @@ positive or negative?
     (e) What is the predicted mpg associated with a horsepower of
 98? What are the associated 95% confidence and prediction
 intervals?   (see `help(predict)`) Provide interpretations of these for the car dealer.
+```{r}
+model1=lm(mpg~horsepower,data=Auto)
+summary(model1)
+#(a)Yes, there is negative relation between mpg and horsepower.
+# and the relation is significant as the pval is smaller than 5%.
+#(b)It is very strong as the pval is smaller than 5% which means
+#it is significant.
+#(c)The relation is negative as the coefficient for horsepower
+#is around -0.15.
+#(d)The coefficient of -0.15 means that if horsepower incresae 1,
+#then the mpg will decrease by aroud -0.15.
+#(e)
+predict(model1,data.frame(horsepower=c(98)),interval='confidence')
+predict(model1,data.frame(horsepower=c(98)),interval='prediction')
+#We can see the predicted mpg is around 24.46. The 95% confiednce and
+#prediction interval are shown above. The 95% confidence interval means
+#based on dist of the fitting model there are 95% chance the mpg will 
+#live in between 23.9 and 24.9. The 95% prediction interval means if 
+#we consider the dist of the prediction(which is differnet form the fitting),
+#there is 95% chance that mpg will live in between 14.8 and 34.1 if the
+#horsepower is 98.
+```
 
 8. Plot the response and the predictor using `ggplot`.  Add to the plot a line showing the least squares regression line. 
 ```{r}
-
+library(ggplot2)
+ggplot(Auto,aes(Auto$horsepower,Auto$mpg))+geom_point()+geom_smooth(method='lm')
 ```
 
 9. Use the `plot()` function to produce diagnostic plots of the least squares regression fit. Comment on any problems you see with the model regarding assumptions for using a simple linear regression.  
 
 ```{r}
-
+plot(model1)
+#From residual VS Fitted and Scale-Location
+#we find that the variance might not be the same 
+#for the different means. From Normal Q-Q we can see that
+#the residual might not be normal distributed.
+#For cooks distance we can see most of the data point are fine.
 ```
 
 ## Theory
@@ -97,23 +174,85 @@ intervals?   (see `help(predict)`) Provide interpretations of these for the car 
 optimal predictor of $Y$ given $X = x$ using squared error loss:  that is $f(x)$
 minimizes $E[(Y - g(x))^2 \mid X =x]$ over all functions $g(x)$ at all points $X=x$.   _Hint:  there are at least two ways to do this.   Differentiation (so think about how to justify) - or - add and subtract the proposed optimal predictor and who that it must minimize the function._
 
+Answer:  
+We want to want the min of $E[(Y - g(x))^2 \mid X =x]$, the variable is a fucntion $g(x)$, so we differentiate the equation by $g(x)$ and let it to be zero. That is:$\frac{\partial (E[(Y - g(x))^2 \mid X =x)}{\partial (g(x))=0}$. That is $E[-2(Y-g(x))\mid X=x]=0$. That is equivalent to $g(x)=E[Y\mid X=x]$. As $\frac{\partial^2 (E[(Y - g(x))^2\mid X =x)}{\partial (g(x))^2}>0$, which means that  $g(x)=E[Y\mid X=x]$ is the minminum point.
+
 11. Irreducible error:  
      (a) show  that for any estimator $\hat{f}(x)$ that
 $$E[(Y - \hat{f}(x))^2 \mid X = x] = 
 \underbrace{(f(x) - \hat{f}(x)))^2}_{Reducible} + \underbrace{\textsf{Var}(\epsilon)}_{Irreducible}
 $$
  _Hint:  try the add zero trick of adding and subtracting $E[Y] = f(x)$_
+ 
+ Answer: 
+ $$
+ E[(Y - \hat{f}(x))^2 \mid X = x]=E[(Y-E[Y]+E[Y]-\hat{f}(x))^2\mid X=x]$$   
+ $$=E[(Y-E[Y])^2\mid X=x]+E(E[Y]-\hat{f}(x))^2\mid X=x]+2*E[(Y-E(Y))(E(Y)-\hat{f}(x))\mid X=x]$$    
+ $$=E[(Y-E[Y])^2\mid X=x]+E(E[Y]-\hat{f}(x))^2\mid X=x]+2*E[Y-E[Y]]*E[E(Y)-\hat{f}(x))\mid X=x]$$      
+ $$=E[(Y-E[Y])^2\mid X=x]+E(E[Y]-\hat{f}(x))^2\mid X=x]
+ +2*0*E[E(Y)-\hat{f}(x))\mid X=x]$$     
+$$ =E[(Y-E[Y])^2\mid X=x]+E(E[Y]-\hat{f}(x))^2\mid X=x]=
+  Var(\epsilon)+(f(x)-\hat{f}(x))^2
+$$
+
    (b) Show that the prediction error can never be smaller than $\sigma^2$: 
  $$E[(Y - \hat{f}(x))^2 \mid X = x] \ge \textsf{Var}(\epsilon)
-$$
+$$  
+Answer:  
+As we know from part a, that $E[(Y - \hat{f}(x))^2 \mid X = x]=Var(\epsilon)+(f(x)-\hat{f}(x))^2$     
+Additionally we know that $(f(x)-\hat{f}(x))^2$ is great or equal to zero.   
+This says that $E[(Y - \hat{f}(x))^2 \mid X = x]$ is great or equal to $Var(\epsilon)$. 
+
 
 e.g. even if we can learn $f(x)$ perfectly that the error in prediction will not vanish.   
 
 12. Exercise 9.3 from [Weisberg](http://search.library.duke.edu/search?id=DUKE005781635)
 (hint:  direct multiplication)
 
+Answer:   
+We want to show A.37 holds, as we know $$X'_i X_i=(X'X-x'_i x_i)^{-1}$$.  
+We can just show A times $A^{-1}$ equals to 1 where A represent to $X'_i X_i$.  That is $$(X'X-x'_i x_i)$$ times $$[(X'X)^{-1}+\frac{(X'X)^{-1}x_i x'_i(X'X)^{-1}}{1-h_{ii}}]$$ is equals to 1.   
+$$[(X'X)^{-1}+\frac{(X'X)^{-1}x_i x'_i(X'X)^{-1}}{1-h_{ii}}]*(X'X-x'_i x_i)$$  
+$$=1-(X'X)^{-1}x_i x'_i+\frac{(X'X)^{-1}x_i x'_i-(X'X)^{-1}x_i x'_i(X'X)^{-1}x_i x'_i}{1-h_{ii}}$$      
+$$=1+\frac{-(X'X)^{-1}x_i x'_i(X'X)^{-1}x_i x'_i+(X'X)^{-1}x_i x'_i h_{ii}}{1-h_{ii}}$$      
+$$=1+\frac{-(X'X)^{-1}x_i h_{ii}x'_i+(X'X)^{-1}x_i x'_i h_{ii}}{1-h_{ii}}$$   
+$$=1+\frac{(-(X'X)^{-1}x_i x'_i+(X'X)^{-1}x_i x'_i)*h_{ii}}{1-h_{ii}} 
+=1$$
+This says that A.37 holds.  
+
+
 13.   Verify Equation A.38 in the Appendix of [Weisberg](http://search.library.duke.edu/search?id=DUKE005781635) 
+
+Answer:  
+we just need to show $$\hat{\beta}_{(i)}-\hat{\beta}=\frac{(X'X)^{-1}x_i \hat{e_i}}{1-h_{ii}}$$  
+We know$$\hat{\beta}_{(i)}-\hat{\beta}=(X'X)^{-1}X'Y-(X'_{(i)}Y_{(i)})^{-1}X'_{(i)}Y_{(i)}$$  
+$$=(X'X)^{-1}X'Y-[(X'X)^{-1}+\frac{(X'X)^{-1}x_i x'_i(X'X)^{-1}}{1-h_{ii}}]*X'_{(i)}Y_{(i)}$$by A.37  
+$$=(X'X)^{-1}X'Y-(X'X)^{-1}(X'Y-(x_{i}y'_{i})-[\frac{(X'X)^{-1}x_i x'_i(X'X)^{-1}}{1-h_{ii}}]*X'_{(i)}Y_{(i)}$$   
+$$=(X'X)^{-1}x_i y'_i+\frac{(X'X)^{-1}x_i x'_i(X'X)^{-1}x_i y'_i-(X'X)^{-1}x_i x'_i(X'Y)^{-1}X'Y}{1-h_{ii}}$$    
+$$=(X'X)^{-1}x_i y'_i+\frac{(X'X)^{-1}x_i h_{ii} y'_i-(X'X)^{-1}x_i x'_i(X'Y)^{-1}X'Y}{1-h_{ii}}$$  
+$$=\frac{(X'X)^{-1}x_i y'_i-h_{ii}(X'X)^{-1}x_i y'_i+(X'X)^{-1}x_i h_{ii}y'_i-(X'X)^{-1}x_i x'_i(X'X)^{-1}X'Y}{1-h_{ii}}$$   
+$$=\frac{(X'X)^{-1}x_i y'_i-(X'X)^{-1}x_i x'_i(X'X)^{-1}X'Y}{1-h_{ii}}$$  
+$$=\frac{(X'X)^{-1}x_i(y'_i-x'_i(X'X)^{-1}X'Y)}{1-h_{ii}}$$  
+$$=\frac{(X'X)^{-1}x_i(y'_i-x'_i \hat{\beta})}{1-h_{ii}}$$  
+$$=\frac{(X'X)^{-1}x_i \hat{e_i}}{1-h_{ii}}$$   proved!  
 
 14. Exercise 9.4 from [Weisberg](http://search.library.duke.edu/search?id=DUKE005781635) 
 
+Answer:  
+$$y_i - x'_i\hat{\beta}_{(i)}=y_i-x'_i(\beta-\frac{(X'X)^{-1}x_i\hat{e}_{i}}{1-h_{ii}})$$  by A.38  
+$$=y_i-x'_i\beta+\frac{h_{ii}\hat{e}_{i}}{1-h_{ii}}$$  
+$$=\frac{\hat{e}_{i}(1-h_{ii})+h_{ii}\hat{e}_{i}}{1-h_{ii}}$$  
+$$=\frac{\hat{e}_{i}}{1-h_{ii}}$$  proved!
+
 15. Exercise 9.5 from [Weisberg](http://search.library.duke.edu/search?id=DUKE005781635) 
+
+Answer:  
+By defintion, $$D_{i}=\frac{(\hat{\beta}-\hat{\beta})'(X'X)(\hat{\beta}-\hat{\beta})}{p'\hat{\sigma}^{2}}$$
+by A.37 and A.38 we know: 
+$$\hat{\beta}-\hat{\beta}=\frac{(X'X)^{-1}x_i \hat{e}_{i}}{1-h_{ii}}$$  
+so $$D_{i}=\frac{(((X'X)^{-1}x_i \hat{e}_{i})/(1-h_{ii}))'(X'X)(((X'X)^{-1}x_i \hat{e}_{i})/(1-h_{ii}))}{p'\hat{\sigma}^{2}}$$  
+$$=\frac{(\hat{e}_i)'x'_i(X'X)^{-1}(X'X)(X'X)^{-1}x_i \hat{e}_{i}}{p'\hat{\sigma}^2 (1-h_{ii})^2}$$  
+$$=\frac{(\hat{e}_i)'x'_i(X'X)^{-1}x_i \hat{e}_{i}}{p'\hat{\sigma}^2 (1-h_{ii})^2}$$  
+$$=\frac{(\hat{e}_i^2)h_{ii}}{p'\hat{\sigma}^2 (1-h_{ii})(1-h_{ii})}$$  
+$$=\frac{h_{ii}r_i^2}{p'(1-h_{ii})}$$ proved!
+
